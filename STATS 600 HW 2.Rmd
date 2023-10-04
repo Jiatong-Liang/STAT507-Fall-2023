@@ -3,7 +3,7 @@ title: "STATS 600 HW2"
 date: "October 3, 2023"
 output:
   pdf_document:
-    toc: yes
+    toc: yes #Table of content
   html_document:
     theme: cosmo
     toc: yes
@@ -14,22 +14,16 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+```{r Problem 4}
+# Generating Design Matrix X with size n = 100 and two covariates
+n = 100
+p = 2
+set.seed(1)
+X = matrix(rnorm(n*p, 0, 1), n, p)
+beta = rnorm(p, 0, 1)
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+epsilon = rlaplace(n, mu = 1, sigma = 2)
+Y = X%*%beta + epsilon
+beta_hat = solve(t(X)%*%X) %*% t(X) %*% Y
+beta_hat
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
