@@ -28,20 +28,37 @@ beta = seq(1, d)
 
 
 # This is for sigma, not sigma^2
-epsilon = rnorm(d, mean = 0, sd = 2)
-Y = X%*%beta + epsilon
-beta_hat = solve(t(X)%*%X) %*% t(X) %*% Y
-
-Yhat = X%*%beta_hat
-RSS = norm(Y - Yhat, type = "2")
-sigma_hat = sqrt(RSS / (n-d))
-se_hat = sigma_hat * sqrt(t(diag(d))%*%solve(t(X)%*%X)%*%diag(d))
-
-# Extracting the diagonal of the matrix se_hat and doing entry-wide division 
-# from beta_hat and diagonal elements
-t = beta_hat / diag(se_hat) # Each entry of t is t_j
-
-
+for (k in 1:10) {
+  epsilon = rnorm(d, mean = 0, sd = 2)
+  Y = X%*%beta + epsilon
+  beta_hat = solve(t(X)%*%X) %*% t(X) %*% Y
+  
+  Yhat = X%*%beta_hat
+  RSS = norm(Y - Yhat, type = "2")^2
+  sigma_hat = sqrt(RSS / (n-d))
+  se_hat = sigma_hat * sqrt(t(diag(d))%*%solve(t(X)%*%X)%*%diag(d))
+  
+  # Extracting the diagonal of the matrix se_hat and doing entry-wide division 
+  # from beta_hat and diagonal elements
+  t = beta_hat / diag(se_hat) # Each entry of t is t_j
+  t_square = t^2
+  
+  f = list()
+  H = X %*% solve(t(X)%*%X) %*% t(X)
+  
+  for (i in 1:d) {
+    H_j = H
+    H_j[,i] = 0
+    numerator = norm((H- H_j)%*%Y , type = "2")^2
+    denominator = norm((diag(n) - H)%*%Y, type = "2")^2
+    f[i] = numerator / ((1/(n-d)) * denominator)
+  }
+  
+  f = matrix(unlist(f), ncol = 1, byrow = TRUE)
+  table = cbind(f, t_square)
+  
+  print(table)
+}
 ```
 
 ```{r Problem 4}
@@ -79,7 +96,6 @@ plot(beta2, s)
 ```
 
 ```{r Problem 4 b}
-library(ExtDist)
 # Generating Design Matrix X with size n = 100 and two covariates
 n = 100
 p = 2
@@ -93,7 +109,7 @@ for (i in 1:1000) {
   X = matrix(rnorm(n*p, 0, 1), n, p)
   beta = rnorm(p, 0, 1)
   
-  epsilon = rt(n, df = n-p)
+  epsilon = rt(n, df = 3)
   Y = X%*%beta + epsilon
   beta_hat = solve(t(X)%*%X) %*% t(X) %*% Y
   beta_hat
@@ -112,7 +128,6 @@ plot(beta1, s)
 plot(beta2, s)
 ```
 ```{r Problem 4 c}
-library(ExtDist)
 # Generating Design Matrix X with size n = 100 and two covariates
 n = 100
 p = 2
@@ -144,4 +159,146 @@ for (i in 1:1000) {
 par(mfrow = c(1, 2))
 plot(beta1, s)
 plot(beta2, s)
+```
+
+```{r Problem 5 a}
+# Generating Design Matrix X with size n = 100 and two covariates
+n = 100
+p = 3
+set.seed(1)
+
+sigma_sq1 = c()
+
+for (i in 1:1000) {
+  X = matrix(rnorm(n*p, 0, 1), n, p)
+  beta = rnorm(p, 0, 1)
+  
+  # sigma is the scale parameter
+  epsilon = rlaplace(n, mu = 0, sigma = 1/sqrt(2))
+  Y = X%*%beta + epsilon
+  beta_hat = solve(t(X)%*%X) %*% t(X) %*% Y
+  
+  Yhat = X%*%beta_hat
+  RSS = norm(Y - Yhat, type = "2")
+  sigma_sq1[i] = RSS / (n-p-1)
+}
+
+var(sigma_sq1)
+```
+
+```{r Problem 5 b}
+# Generating Design Matrix X with size n = 100 and two covariates
+n = 100
+p = 3
+set.seed(1)
+
+sigma_sq2 = c()
+
+for (i in 1:1000) {
+  X = matrix(rnorm(n*p, 0, 1), n, p)
+  beta = rnorm(p, 0, 1)
+  
+  # df = degree of freedom
+  epsilon = rt(n, df = 3) / sqrt(3)
+  Y = X%*%beta + epsilon
+  beta_hat = solve(t(X)%*%X) %*% t(X) %*% Y
+  
+  Yhat = X%*%beta_hat
+  RSS = norm(Y - Yhat, type = "2")
+  sigma_sq2[i] = RSS / (n-p-1)
+}
+
+var(sigma_sq2)
+```
+
+```{r Problem 5 c}
+# Generating Design Matrix X with size n = 100 and two covariates
+n = 100
+p = 3
+set.seed(1)
+
+sigma_sq3 = c()
+
+for (i in 1:1000) {
+  X = matrix(rnorm(n*p, 0, 1), n, p)
+  beta = rnorm(p, 0, 1)
+  
+  # df = degree of freedom
+  epsilon = rexp(n, rate = 1) - 1
+  Y = X%*%beta + epsilon
+  beta_hat = solve(t(X)%*%X) %*% t(X) %*% Y
+  
+  Yhat = X%*%beta_hat
+  RSS = norm(Y - Yhat, type = "2")
+  sigma_sq3[i] = RSS / (n-p-1)
+}
+
+var(sigma_sq3)
+```
+
+```{r Problem 5 c}
+# Generating Design Matrix X with size n = 100 and two covariates
+n = 100
+p = 3
+set.seed(1)
+
+sigma_sq4 = c()
+
+for (i in 1:1000) {
+  X = matrix(rnorm(n*p, 0, 1), n, p)
+  beta = rnorm(p, 0, 1)
+  
+  # df = degree of freedom
+  epsilon = rnorm(n, mean = 0, sd = 1)
+  Y = X%*%beta + epsilon
+  beta_hat = solve(t(X)%*%X) %*% t(X) %*% Y
+  
+  Yhat = X%*%beta_hat
+  RSS = norm(Y - Yhat, type = "2")
+  sigma_sq4[i] = RSS / (n-p-1)
+}
+
+var(sigma_sq4)
+```
+
+
+```{r Problem 5 e}
+all_sigma_square = cbind(sigma_sq1, sigma_sq2, sigma_sq3, sigma_sq4)
+```
+
+```{r Problem 7}
+# Generating Design Matrix X with size n = 100 and two covariates
+library(combinat)
+library(MASS)
+n = 500
+d = 10
+set.seed(1)
+comb = combn(c(1,2,3,4,5,6,7,8,9,10), 3)
+
+
+for (i in 1:20) {
+  X = matrix(rnorm(n*d, 0, 1), n, d)
+  beta = matrix(c(5, 5, 0, 0, 0, 0, 0, 0, 0, 0), 10, 1)
+  epsilon <- rnorm(n, 0, 1)
+  RSS = c()
+  RSSi = c()
+  
+  # Y = mvrnorm(n, mu = X[,-(3:d)] %*% betaE, Sigma = diag(n))
+  Y = X %*% beta + epsilon
+  
+  for (j in 1:ncol(comb)) {
+    beta_hat = solve(t(X[,comb[,j]])%*%X[,comb[,j]]) %*% t(X[,comb[,j]]) %*% Y
+    Yhat = X[,comb[,j]]%*%beta_hat
+    H = X[,comb[,j]] %*% solve(t(X[,comb[,j]])%*%X[,comb[,j]]) %*% t(X[,comb[,j]])
+    
+    for (k in 1:n) {
+      RSSi[k] = norm((Y[k,] - Yhat[k,]) / (1 - H[k,k]), type = "2")^2
+    }
+    
+    RSS[j] = sum(RSSi)
+  }
+  
+  best_model = which.min(RSS)
+  print(comb[,best_model])
+}
 ```
